@@ -36,46 +36,46 @@ ICM = sps.coo_matrix(tracks_data.values)
 ICM = ICM.tocsr()
 
 # Create Train et Test sets
-URM_train, URM_test = train_test_holdout(URM_all, train_perc=0.8)
+URM_train, URM_test = train_test_holdout(URM_all, train_perc=0.9)
 
 # Create recommender
 recommender = ItemCBFKNNRecommender(URM_train, ICM)
-recommender.fit(shrink=0.0, topK=30)
-topPopRecommender = TopPopRecommender()
-topPopRecommender.fit(URM_train)
+
+# topPopRecommender = TopPopRecommender()
+# topPopRecommender.fit(URM_train)
 
 # ef.evaluate_algorithm(URM_test, topPopRecommender)
 
-# Recommendation time evaluation
-n_users_to_test = 1000
-
-start_time = time.time()
-
-for user_id in range(n_users_to_test):
-    recommender.recommend(user_id, at=5)
-
-end_time = time.time()
-
-print("Wrong implementation speed is {:.2f} usr/sec".format(n_users_to_test / (end_time - start_time)))
-
 # Evaluation of neighbors
 
-neigh_nb = [5, 10, 20, 30, 50, 100, 200, 500]
+k_nb = [5, 10, 20, 30, 50, 100, 200, 500]
 MAP_per_k = []
 MAP_per_shrink = []
 
-for topK in neigh_nb:
+for topK in k_nb:
     recommender.fit(shrink=0.0, topK=topK)
     result_dict = ef.evaluate_algorithm(URM_test, recommender)
     MAP_per_k.append(result_dict["MAP"])
 
-shrink_term = [0.1, 0.5, 1, 2, 4, 6, 8, 10]
+optim_k_index = MAP_per_k.index(max(MAP_per_k))
+optim_k = k_nb[optim_k_index]
 
-for shrink in shrink_term:
-    recommender.fit(shrink=shrink, )
+shrink_term_nb = [0.1, 0.5, 1, 2, 4, 6, 8, 10]
+
+for shrink in shrink_term_nb:
+    recommender.fit(shrink=shrink, topK=optim_k)
     result_dict = ef.evaluate_algorithm(URM_test, recommender)
     MAP_per_shrink.append(result_dict["MAP"])
 
+
+optim_shrink_index = MAP_per_shrink.index(max(MAP_per_shrink))
+optim_shrink = shrink_term_nb[optim_shrink_index]
+
+print("Optimum k : {}".format(optim_k))
+print("Optimum shrink : {}".format(optim_shrink))
+
+recommender.fit(shrink=optim_shrink, topK=optim_k)
+
 target_data = pd.read_csv('data/target_playlists.csv')
 
-ws.write_submission(target_data, topPopRecommender, 'output/submission.csv', at=10)
+ws.write_submission(target_data, recommender, 'output/submission.csv', at=10)

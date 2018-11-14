@@ -12,6 +12,23 @@ sample_submission.csv: correct format for submissions
 playlist_id : identifier of the playlist
 track_id : identifier of the track
 
+## Cold users analysis
+According to the data here is the repartition of the number of 
+tracks per playlist. 
+
+|  Number of tracks         |    Number of playlists   |
+| :-------------:           |: -------------:                   | 
+| <=5                        |        1788                          |
+| <10                       |        11657                          | 
+| <20                       |        26093                          | 
+| <30                       |        35959                          | 
+| <40                       |        42285                          | 
+| <100                       |        50446                          | 
+
+> total number of playlist : 50446
+
+After a comparison between the cold users found in the dataset
+and users in test dataset, there are no users with a track number <= 5. 
 # Process 
 
 - Sparse matrices creation

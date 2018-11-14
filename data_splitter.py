@@ -11,13 +11,10 @@ import scipy.sparse as sps
 
 def train_test_holdout(URM_all, train_perc = 0.8):
 
-
     numInteractions = URM_all.nnz
     URM_all = URM_all.tocoo()
 
-
     train_mask = np.random.choice([True,False], numInteractions, [train_perc, 1-train_perc])
-
 
     URM_train = sps.coo_matrix((URM_all.data[train_mask], (URM_all.row[train_mask], URM_all.col[train_mask])))
     URM_train = URM_train.tocsr()
