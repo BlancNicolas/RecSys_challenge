@@ -1,6 +1,6 @@
 import csv
 
-def write_submission(target_users, recommender_object, path, at=5):
+def write_submission(target_users, recommender_object, path, at=10):
 
     with open(path, mode='w') as file:
         csv_writer = csv.writer(file, delimiter=',', quoting=csv.QUOTE_MINIMAL)
