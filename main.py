@@ -4,8 +4,8 @@ import time
 import numpy as np
 import pandas as pd
 import scipy.sparse as sps
-import evaluation_function as ef
 import write_submission as ws
+import validation
 
 from data_splitter import train_test_holdout
 from recommenders import ItemCBFKNNRecommender
@@ -37,6 +37,7 @@ ICM = ICM.tocsr()
 
 # Create Train et Test sets
 URM_train, URM_test = train_test_holdout(URM_all, train_perc=0.9)
+URM_train, URM_validation = train_test_holdout(URM_all, train_perc=0.9)
 
 # Create recommender
 recommender = ItemCBFKNNRecommender(URM_train, ICM)
@@ -46,30 +47,9 @@ recommender = ItemCBFKNNRecommender(URM_train, ICM)
 
 # ef.evaluate_algorithm(URM_test, topPopRecommender)
 
-# Evaluation of neighbors
-
-k_nb = [5, 10, 20, 30, 50, 100, 200, 500]
-MAP_per_k = []
-MAP_per_shrink = []
-
-for topK in k_nb:
-    recommender.fit(shrink=0.0, topK=topK)
-    result_dict = ef.evaluate_algorithm(URM_test, recommender)
-    MAP_per_k.append(result_dict["MAP"])
-
-optim_k_index = MAP_per_k.index(max(MAP_per_k))
-optim_k = k_nb[optim_k_index]
-
-shrink_term_nb = [0.1, 0.5, 1, 2, 4, 6, 8, 10]
-
-for shrink in shrink_term_nb:
-    recommender.fit(shrink=shrink, topK=optim_k)
-    result_dict = ef.evaluate_algorithm(URM_test, recommender)
-    MAP_per_shrink.append(result_dict["MAP"])
-
-
-optim_shrink_index = MAP_per_shrink.index(max(MAP_per_shrink))
-optim_shrink = shrink_term_nb[optim_shrink_index]
+# Evaluation of algorithm
+validator = validation.Validation(URM_train, URM_validation, URM_test, recommender)
+optim_shrink, optim_k = validator.parameters_tunning()
 
 print("Optimum k : {}".format(optim_k))
 print("Optimum shrink : {}".format(optim_shrink))
