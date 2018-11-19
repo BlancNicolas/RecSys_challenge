@@ -40,10 +40,8 @@ URM_train, URM_test = train_test_holdout(URM_all, train_perc=0.9)
 URM_train, URM_validation = train_test_holdout(URM_all, train_perc=0.9)
 
 # Create recommender
-recommender = ItemCBFKNNRecommender(URM_train, ICM)
-
-# topPopRecommender = TopPopRecommender()
-# topPopRecommender.fit(URM_train)
+recommender = ItemKNNCFRecommender(URM_train)
+recommender.fit()
 
 # ef.evaluate_algorithm(URM_test, topPopRecommender)
 
@@ -54,12 +52,10 @@ optim_shrink, optim_k = validator.parameters_tunning()
 print("Optimum k : {}".format(optim_k))
 print("Optimum shrink : {}".format(optim_shrink))
 
-recommender.fit(shrink=optim_shrink, topK=optim_k)
+recommender.fit(shrink=optim_shrink, k=optim_k)
 
 target_data = pd.read_csv('data/target_playlists.csv')
 
 ws.write_submission(target_data, recommender, 'output/submission.csv', at=10)
 
-myrecommender = ItemKNNCFRecommender(URM_train)
-myrecommender.fit(shrink=100, k=50)
-print(myrecommender.evaluateRecommendations(URM_test))
+print(recommender.evaluateRecommendations(URM_test))

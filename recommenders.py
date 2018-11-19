@@ -44,9 +44,9 @@ class ItemCBFKNNRecommender(object):
         self.URM = URM
         self.ICM = ICM
 
-    def fit( self, topK=50, shrink=100, normalize=True, similarity="cosine" ):
+    def fit( self, k=50, shrink=100, normalize=True, similarity="cosine" ):
         similarity_object = Compute_Similarity_Python(self.ICM.T, shrink=shrink,
-                                                      topK=topK, normalize=normalize,
+                                                      topK=k, normalize=normalize,
                                                       similarity=similarity)
 
         self.W_sparse = similarity_object.compute_similarity()

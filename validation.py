@@ -4,13 +4,15 @@ from matplotlib import pyplot as plt
 
 
 class Validation:
-    def __init__(self, train_data, validation_data, test_data, test_recommender):
+    def __init__(self, train_data, validation_data, test_data, test_recommender, test_recommender_2=None):
         self.train = train_data
         self.validation = validation_data
         self.test = test_data
         self.recommender = test_recommender
         self.optim_k = 10
         self.optim_shrink = 1
+        if test_recommender_2:
+            self.recommender_2 = test_recommender_2
 
     def time_test(self):
         # Recommendation time evaluation
@@ -36,7 +38,7 @@ class Validation:
             k_nb = [5, 10, 20, 30, 50, 100, 200, 500]
             MAP_per_k = []
             for k in k_nb:
-                self.recommender.fit(shrink=self.optim_shrink, topK=k)
+                self.recommender.fit(shrink=self.optim_shrink, k=k)
                 result_dict = ef.evaluate_algorithm(self.validation, self.recommender)
                 MAP_per_k.append(result_dict["MAP"])
 
@@ -57,7 +59,7 @@ class Validation:
             shrink_term_nb = [0.1, 0.5, 1, 2, 4, 6, 8, 10]
             MAP_per_shrink = []
             for shrink in shrink_term_nb:
-                self.recommender.fit(shrink=shrink, topK=self.optim_k)
+                self.recommender.fit(shrink=shrink, k=self.optim_k)
                 result_dict = ef.evaluate_algorithm(self.validation, self.recommender)
                 MAP_per_shrink.append(result_dict["MAP"])
 
