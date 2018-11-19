@@ -9,7 +9,7 @@ import validation
 
 from data_splitter import train_test_holdout
 from recommenders import ItemCBFKNNRecommender
-from recommenders import TopPopRecommender
+from recommenders import TopPopRecommender, ItemKNNCFRecommender
 
 # Loading data
 tracks_data = pd.read_csv("data/tracks.csv")
@@ -59,3 +59,7 @@ recommender.fit(shrink=optim_shrink, topK=optim_k)
 target_data = pd.read_csv('data/target_playlists.csv')
 
 ws.write_submission(target_data, recommender, 'output/submission.csv', at=10)
+
+myrecommender = ItemKNNCFRecommender(URM_train)
+myrecommender.fit(shrink=100, k=50)
+print(myrecommender.evaluateRecommendations(URM_test))

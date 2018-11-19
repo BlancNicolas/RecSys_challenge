@@ -1,6 +1,11 @@
 import numpy as np
 
 from Compute_Similarity_Python import Compute_Similarity_Python
+from Base.Recommender_utils import check_matrix
+
+from Base.Recommender import Recommender
+from Base.Similarity_Matrix_Recommender import Similarity_Matrix_Recommender
+from Base.cosine_similarity import Cosine_Similarity
 
 
 class TopPopRecommender(object):
@@ -69,3 +74,29 @@ class ItemCBFKNNRecommender(object):
 
         return scores
 
+
+class ItemKNNCFRecommender(Recommender, Similarity_Matrix_Recommender):
+    """ ItemKNN recommender"""
+
+    def __init__(self, URM_train, sparse_weights=True):
+        super(ItemKNNCFRecommender, self).__init__()
+
+        # CSR is faster during evaluation
+        self.URM_train = check_matrix(URM_train, 'csr')
+
+        self.dataset = None
+
+        self.sparse_weights = sparse_weights
+
+    def fit(self, k=50, shrink=100, similarity='cosine', normalize=True):
+
+        self.k = k
+        self.shrink = shrink
+
+        self.similarity = Cosine_Similarity(self.URM_train, shrink=shrink, topK=k, normalize=normalize, mode = similarity)
+
+        if self.sparse_weights:
+            self.W_sparse = self.similarity.compute_similarity()
+        else:
+            self.W = self.similarity.compute_similarity()
+            self.W = self.W.toarray()
