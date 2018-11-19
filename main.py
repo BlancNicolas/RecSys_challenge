@@ -8,8 +8,7 @@ import write_submission as ws
 import validation
 
 from data_splitter import train_test_holdout
-from recommenders import ItemCBFKNNRecommender
-from recommenders import TopPopRecommender, ItemKNNCFRecommender
+from recommenders import TopPopRecommender, ItemKNNCFRecommender, HybridRecommender, ItemCBFKNNRecommender
 
 # Loading data
 tracks_data = pd.read_csv("data/tracks.csv")
@@ -40,22 +39,25 @@ URM_train, URM_test = train_test_holdout(URM_all, train_perc=0.9)
 URM_train, URM_validation = train_test_holdout(URM_all, train_perc=0.9)
 
 # Create recommender
-recommender = ItemKNNCFRecommender(URM_train)
-recommender.fit()
 
-# ef.evaluate_algorithm(URM_test, topPopRecommender)
+recommender_CB = ItemCBFKNNRecommender(URM_train, ICM)
+recommender_CF = ItemKNNCFRecommender(URM_train)
+hybrid_recommender = HybridRecommender(URM_all, URM_train, recommender_CB, recommender_CF)
+hybrid_recommender.fit()
 
-# Evaluation of algorithm
-validator = validation.Validation(URM_train, URM_validation, URM_test, recommender)
-optim_shrink, optim_k = validator.parameters_tunning()
-
-print("Optimum k : {}".format(optim_k))
-print("Optimum shrink : {}".format(optim_shrink))
-
-recommender.fit(shrink=optim_shrink, k=optim_k)
+# # ef.evaluate_algorithm(URM_test, topPopRecommender)
+#
+# # Evaluation of algorithm
+# validator = validation.Validation(URM_train, URM_validation, URM_test, recommender)
+# optim_shrink, optim_k = validator.parameters_tunning()
+#
+# print("Optimum k : {}".format(optim_k))
+# print("Optimum shrink : {}".format(optim_shrink))
+#
+# recommender.fit(shrink=optim_shrink, k=optim_k)
 
 target_data = pd.read_csv('data/target_playlists.csv')
 
-ws.write_submission(target_data, recommender, 'output/submission.csv', at=10)
+ws.write_submission(target_data, hybrid_recommender, 'output/submission.csv', at=10)
 
-print(recommender.evaluateRecommendations(URM_test))
+#print(hybrid_recommender.evaluateRecommendations(URM_test))

@@ -100,3 +100,56 @@ class ItemKNNCFRecommender(Recommender, Similarity_Matrix_Recommender):
         else:
             self.W = self.similarity.compute_similarity()
             self.W = self.W.toarray()
+
+class HybridRecommender(Recommender, Similarity_Matrix_Recommender):
+
+    def __init__(self, URM ,URM_train, recommender_1, recommender_2, sparse_weights=True):
+        super(HybridRecommender, self).__init__()
+
+        self.URM = URM
+        self.URM_train = check_matrix(URM_train, 'csr')
+        self.recommender_CB = recommender_1
+        self.recommender_CF = recommender_2
+        self.sparse_weights = sparse_weights
+
+    def fit( self, k_1=5, shrink_1=0.5, k_2=500, shrink_2=10, similarity='cosine', normalize=True ):
+
+        self.k_CB = k_1
+        self.k_CF = k_2
+        self.shrink_CB= shrink_1
+        self.shrink_CF = shrink_2
+
+        self.recommender_CB.fit(shrink=self.shrink_CB, k=self.k_CB)
+        self.recommender_CF.fit(shrink=self.shrink_CF, k=self.k_CF)
+
+    def recommend( self, user_id, at=None, exclude_seen=True, weight_CB=0.1, weight_CF=0.9):
+        # compute the scores using the dot product
+        user_profile = self.URM[user_id]
+
+        scores_CB = user_profile.dot(self.recommender_CB.W_sparse).toarray().ravel()
+        scores_CF = user_profile.dot(self.recommender_CF.W_sparse).toarray().ravel()
+
+        # use weights
+        scores_CB = scores_CB * weight_CB
+        scores_CF = scores_CF * weight_CF
+
+        self.scores = scores_CB + scores_CF
+
+        if exclude_seen:
+            scores = self.filter_seen(user_id, self.scores)
+
+        # rank items
+        ranking = scores.argsort()[::-1]
+
+        return ranking[:at]
+
+    def filter_seen( self, user_id, scores ):
+        start_pos = self.URM.indptr[user_id]
+        end_pos = self.URM.indptr[user_id + 1]
+
+        user_profile = self.URM.indices[start_pos:end_pos]
+
+        scores[user_profile] = -np.inf
+
+        return scores
+
