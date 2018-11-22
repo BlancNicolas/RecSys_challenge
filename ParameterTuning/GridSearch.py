@@ -26,14 +26,6 @@ class GridSearch(RandomSearch):
 
         super(GridSearch, self).__init__(recommender_class, evaluation_function_validation= evaluation_function_validation)
 
-
-
-
-
-
-
-
-
     def search(self, dictionary_input, metric ="map", n_cases = 30, output_root_path = None, parallelPoolSize = 2, parallelize = True,
                save_model = "best"):
 

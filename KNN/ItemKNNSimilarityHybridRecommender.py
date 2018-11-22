@@ -8,11 +8,11 @@ Created on 15/04/18
 
 from Base.Recommender import Recommender
 from Base.Recommender_utils import check_matrix, similarityMatrixTopK
-from Base.SimilarityMatrixRecommender import SimilarityMatrixRecommender
+from Base.Similarity_Matrix_Recommender import Similarity_Matrix_Recommender
 
 
 
-class ItemKNNSimilarityHybridRecommender(SimilarityMatrixRecommender, Recommender):
+class ItemKNNSimilarityHybridRecommender(Similarity_Matrix_Recommender, Recommender):
     """ ItemKNNSimilarityHybridRecommender
     Hybrid of two similarities S = S1*alpha + S2*(1-alpha)
 
