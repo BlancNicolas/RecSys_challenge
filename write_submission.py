@@ -1,6 +1,6 @@
 import csv
 
-def write_submission(target_users, recommender_object, path, at=10):
+def write_submission(target_users, recommender_object, path, at=10, verbose=False):
     """
     :param target_users: list of user we want to make a recommendation
     :param recommender_object: the recommender instance
@@ -13,5 +13,7 @@ def write_submission(target_users, recommender_object, path, at=10):
         csv_writer.writerow(['playlist_id', 'track_ids'])
 
         for user_id in target_users['playlist_id']:
-                recommended_items = recommender_object.recommend(user_id, at=at)
-                csv_writer.writerow([user_id, ' '.join(str(x) for x in recommended_items)])
+            if verbose:
+                print("User {}".format(user_id))
+            recommended_items = recommender_object.recommend(user_id, at=at)
+            csv_writer.writerow([user_id, ' '.join(str(x) for x in recommended_items)])

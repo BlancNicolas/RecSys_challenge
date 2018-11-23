@@ -6,6 +6,7 @@ from Base.Recommender_utils import check_matrix
 from Base.Recommender import Recommender
 from Base.Similarity_Matrix_Recommender import Similarity_Matrix_Recommender
 from Base.cosine_similarity import Cosine_Similarity
+from Base.Similarity.Compute_Similarity import Compute_Similarity
 
 
 class TopPopRecommender(object):
@@ -101,39 +102,125 @@ class ItemKNNCFRecommender(Recommender, Similarity_Matrix_Recommender):
             self.W = self.similarity.compute_similarity()
             self.W = self.W.toarray()
 
+
+class UserKNNCFRecommender(Recommender, Similarity_Matrix_Recommender):
+    """ UserKNN recommender"""
+
+    def __init__(self, URM_train, sparse_weights=True):
+        super(UserKNNCFRecommender, self).__init__()
+
+        # Not sure if CSR here is faster
+        self.URM_train = check_matrix(URM_train, 'csr')
+
+        self.dataset = None
+
+        self.sparse_weights = sparse_weights
+
+    def fit(self, k=50, shrink=100, similarity='cosine', normalize=True):
+
+        self.k = k
+        self.shrink = shrink
+
+        self.similarity = Cosine_Similarity(self.URM_train.T, shrink=shrink, topK=k, normalize=normalize, mode = similarity)
+
+        if self.sparse_weights:
+            self.W_sparse = self.similarity.compute_similarity()
+        else:
+            self.W = self.similarity.compute_similarity()
+            self.W = self.W.toarray()
+
+    def recommend( self, user_id, n=None, exclude_seen=True, filterTopPop=False, filterCustomItems=False ):
+
+        if n == None:
+            n = self.URM_train.shape[1] - 1
+
+        # compute the scores using the dot product
+        if self.sparse_weights:
+
+            scores = self.W_sparse[user_id].dot(self.URM_train).toarray().ravel()
+
+        else:
+            # Numpy dot does not recognize sparse matrices, so we must
+            # invoke the dot function on the sparse one
+            scores = self.URM_train.T.dot(self.W[user_id])
+
+        if self.normalize:
+            # normalization will keep the scores in the same range
+            # of value of the ratings in dataset
+            user_profile = self.URM_train[user_id]
+
+            rated = user_profile.copy()
+            rated.data = np.ones_like(rated.data)
+            if self.sparse_weights:
+                den = rated.dot(self.W_sparse).toarray().ravel()
+            else:
+                den = rated.dot(self.W).ravel()
+            den[np.abs(den) < 1e-6] = 1.0  # to avoid NaNs
+            scores /= den
+
+        if exclude_seen:
+            scores = self._filter_seen_on_scores(user_id, scores)
+
+        if filterTopPop:
+            scores = self._filter_TopPop_on_scores(scores)
+
+        if filterCustomItems:
+            scores = self._filterCustomItems_on_scores(scores)
+
+        # rank items and mirror column to obtain a ranking in descending score
+        # ranking = scores.argsort()
+        # ranking = np.flip(ranking, axis=0)
+
+        # Sorting is done in three steps. Faster then plain np.argsort for higher number of items
+        # - Partition the data to extract the set of relevant items
+        # - Sort only the relevant items
+        # - Get the original item index
+        relevant_items_partition = (-scores).argpartition(n)[0:n]
+        relevant_items_partition_sorting = np.argsort(-scores[relevant_items_partition])
+        ranking = relevant_items_partition[relevant_items_partition_sorting]
+
+        return ranking
+
+
 class HybridRecommender(Recommender, Similarity_Matrix_Recommender):
 
-    def __init__(self, URM ,URM_train, recommender_1, recommender_2, sparse_weights=True):
+    def __init__(self, URM ,URM_train, recommender_1, recommender_2, recommender_3, sparse_weights=True, normalize=True):
         super(HybridRecommender, self).__init__()
-
+        self.normalize = normalize
         self.URM = URM
         self.URM_train = check_matrix(URM_train, 'csr')
         self.recommender_CB = recommender_1
         self.recommender_CF = recommender_2
+        self.recommender_UCF = recommender_3
         self.sparse_weights = sparse_weights
 
-    def fit( self, k_1=5, shrink_1=0.5, k_2=500, shrink_2=10, similarity='cosine', normalize=True ):
+    def fit( self, k_1=5, shrink_1=0.5, k_2=800, shrink_2=10, k_3=300, shrink_3=300, similarity='cosine', normalize=True ):
 
         self.k_CB = k_1
         self.k_CF = k_2
+        self.k_UCF = k_3
         self.shrink_CB= shrink_1
         self.shrink_CF = shrink_2
+        self.shrink_UCF = shrink_3
 
         self.recommender_CB.fit(shrink=self.shrink_CB, k=self.k_CB)
         self.recommender_CF.fit(shrink=self.shrink_CF, k=self.k_CF)
+        self.recommender_UCF.fit(shrink=self.shrink_UCF, k=self.k_UCF)
 
-    def recommend( self, user_id, at=None, exclude_seen=True, weight_CB=0.1, weight_CF=0.9):
+    def recommend( self, user_id, at=None, exclude_seen=True, weight_CB=0.1, weight_CF=0.70, weight_UCF=0.20):
         # compute the scores using the dot product
         user_profile = self.URM[user_id]
 
         scores_CB = user_profile.dot(self.recommender_CB.W_sparse).toarray().ravel()
         scores_CF = user_profile.dot(self.recommender_CF.W_sparse).toarray().ravel()
+        scores_UCF = self.recommender_UCF.W_sparse[user_id].dot(self.URM_train).toarray().ravel()
 
         # use weights
         scores_CB = scores_CB * weight_CB
         scores_CF = scores_CF * weight_CF
+        scores_UCF = scores_UCF * weight_UCF
 
-        self.scores = scores_CB + scores_CF
+        self.scores = scores_CB + scores_CF + scores_UCF
 
         if exclude_seen:
             scores = self.filter_seen(user_id, self.scores)
