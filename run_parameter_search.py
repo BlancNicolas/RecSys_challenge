@@ -515,9 +515,9 @@ def read_data_split_and_search():
 
 
     collaborative_algorithm_list = [
-        HybridRecommender,
-        Random,
-        TopPop,
+        #HybridRecommender,
+        #Random,
+        #TopPop,
         P3alphaRecommender,
         RP3betaRecommender,
         ItemKNNCFRecommender,

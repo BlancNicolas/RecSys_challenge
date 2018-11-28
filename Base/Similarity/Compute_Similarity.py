@@ -12,6 +12,8 @@ import scipy.sparse as sps
 from Base.Similarity.Compute_Similarity_Python import Compute_Similarity_Python
 from Base.Similarity.Compute_Similarity_Euclidean import Compute_Similarity_Euclidean
 
+import subprocess
+import os, sys, time
 
 from enum import Enum
 
@@ -29,7 +31,7 @@ class SimilarityFunction(Enum):
 class Compute_Similarity:
 
 
-    def __init__(self, dataMatrix, use_implementation = "density", similarity = None, **args):
+    def __init__(self, dataMatrix, use_implementation = "cython", similarity = None, **args):
         """
         Interface object that will call the appropriate similarity implementation
         :param dataMatrix:
@@ -105,6 +107,14 @@ class Compute_Similarity:
     def compute_similarity(self,  **args):
 
         return self.compute_similarity_object.compute_similarity(**args)
+
+        # Command to run compilation script
+        # python compileCython.py SLIM_BPR_Cython_Epoch.pyx build_ext --inplace
+
+        # Command to generate html report
+        # cython -a SLIM_BPR_Cython_Epoch.pyx
+
+
 
 
 #

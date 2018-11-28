@@ -8,13 +8,13 @@ Created on 23/10/17
 
 from Base.Recommender import Recommender
 from Base.Recommender_utils import check_matrix
-from Base.Similarity_Matrix_Recommender import Similarity_Matrix_Recommender
+from Base.SimilarityMatrixRecommender import SimilarityMatrixRecommender
 
 
 from Base.Similarity.Compute_Similarity import Compute_Similarity
 
 
-class ItemKNNCFRecommender(Similarity_Matrix_Recommender, Recommender):
+class ItemKNNCFRecommender(SimilarityMatrixRecommender, Recommender):
     """ ItemKNN recommender"""
 
     RECOMMENDER_NAME = "ItemKNNCFRecommender"

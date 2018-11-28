@@ -3,11 +3,11 @@
 
 from Base.Recommender import Recommender
 from Base.Recommender_utils import check_matrix, similarityMatrixTopK
-from Base.Similarity_Matrix_Recommender import Similarity_Matrix_Recommender
+from Base.SimilarityMatrixRecommender import SimilarityMatrixRecommender
 import numpy as np
 
 
-class HybridRecommender(Similarity_Matrix_Recommender, Recommender):
+class HybridRecommender(SimilarityMatrixRecommender, Recommender):
     """ Hybrid recommender
     weights : list
     topK : number
@@ -16,7 +16,7 @@ class HybridRecommender(Similarity_Matrix_Recommender, Recommender):
 
     RECOMMENDER_NAME = "HybridRecommender"
 
-    def __init__(self, URM_train, Similarities_list, weights_list, sparse_weights=True):
+    def __init__(self, URM_train, Similarities_list, sparse_weights=True):
         """
         :param URM_train:
         :param Similarities_list: The list of Similarities Matrices originating from their recommender

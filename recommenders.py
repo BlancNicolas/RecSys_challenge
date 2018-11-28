@@ -4,7 +4,7 @@ from Compute_Similarity_Python import Compute_Similarity_Python
 from Base.Recommender_utils import check_matrix
 
 from Base.Recommender import Recommender
-from Base.Similarity_Matrix_Recommender import Similarity_Matrix_Recommender
+from Base.SimilarityMatrixRecommender import SimilarityMatrixRecommender
 from Base.cosine_similarity import Cosine_Similarity
 from Base.Similarity.Compute_Similarity import Compute_Similarity
 
@@ -76,7 +76,7 @@ class ItemCBFKNNRecommender(object):
         return scores
 
 
-class ItemKNNCFRecommender(Recommender, Similarity_Matrix_Recommender):
+class ItemKNNCFRecommender(Recommender, SimilarityMatrixRecommender):
     """ ItemKNN recommender"""
 
     def __init__(self, URM_train, sparse_weights=True):
@@ -103,7 +103,7 @@ class ItemKNNCFRecommender(Recommender, Similarity_Matrix_Recommender):
             self.W = self.W.toarray()
 
 
-class UserKNNCFRecommender(Recommender, Similarity_Matrix_Recommender):
+class UserKNNCFRecommender(Recommender, SimilarityMatrixRecommender):
     """ UserKNN recommender"""
 
     def __init__(self, URM_train, sparse_weights=True):
@@ -182,7 +182,7 @@ class UserKNNCFRecommender(Recommender, Similarity_Matrix_Recommender):
         return ranking
 
 
-class HybridRecommender(Recommender, Similarity_Matrix_Recommender):
+class HybridRecommender(Recommender, SimilarityMatrixRecommender):
 
     def __init__(self, URM ,URM_train, recommender_1, recommender_2, recommender_3, sparse_weights=True, normalize=True):
         super(HybridRecommender, self).__init__()
@@ -207,7 +207,7 @@ class HybridRecommender(Recommender, Similarity_Matrix_Recommender):
         self.recommender_CF.fit(shrink=self.shrink_CF, k=self.k_CF)
         self.recommender_UCF.fit(shrink=self.shrink_UCF, k=self.k_UCF)
 
-    def recommend( self, user_id, at=None, exclude_seen=True, weight_CB=0.1, weight_CF=0.70, weight_UCF=0.20):
+    def recommend( self, user_id, at=None, exclude_seen=True, weight_CB=0.08, weight_CF=0.80, weight_UCF=0.12):
         # compute the scores using the dot product
         user_profile = self.URM[user_id]
 
