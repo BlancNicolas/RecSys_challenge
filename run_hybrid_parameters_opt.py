@@ -12,6 +12,7 @@ import os
 import numpy as np
 import itertools
 from data.Movielens_10M.Movielens10MReader import split_train_validation_test
+from parameters import HYBRID_ICF_CB_UCF_WEIGHTS, Fit_Parameters
 
 data = Data()
 URM = data.get_URM()
@@ -52,7 +53,8 @@ parameterSearch = BayesianSearch(recommender_class,
 # Generating lists of weights to evaluate
 # ------------------------
 
-alpha_list = np.arange(0.1, 1.0, 0.1)
+#alpha_list = np.arange(0.1, 1.0, 0.1)
+alpha_list = np.arange(0.0, 1.05, 0.05)
 l1 = (alpha_list)
 weight_list = list(itertools.product(l1, l1, l1))
 only_sum_equal_1 = list(filter(lambda x: sum(list(x)) == 1, weight_list))
@@ -81,9 +83,9 @@ UserBased = UserKNNCFRecommender(URM_train)
 ItemBased = ItemKNNCFRecommender(URM_train)
 ContentBased = ItemKNNCBFRecommender(ICM, URM_train)
 
-UserBased.fit(topK=300, shrink=200)
-ItemBased.fit(topK=300, shrink=100)
-ContentBased.fit(topK=50, shrink=100)
+UserBased.fit(topK=Fit_Parameters.UCF_TOPK, shrink=Fit_Parameters.UCF_SHRINK)
+ItemBased.fit(topK=Fit_Parameters.ICF_TOPK, shrink=Fit_Parameters.ICF_SHRINK)
+ContentBased.fit(topK=Fit_Parameters.CB_TOPK, shrink=Fit_Parameters.CB_SHRINK)
 
 
 # -------------------------------
@@ -115,4 +117,5 @@ metric_to_optimize = "MAP"
 best_parameters = parameterSearch.search(recommenderDictionary,
                                          n_cases = n_cases,
                                          output_root_path = output_root_path,
-                                         metric=metric_to_optimize)
+                                         metric=metric_to_optimize,
+                                         init_points=20)

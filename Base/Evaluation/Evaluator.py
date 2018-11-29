@@ -138,7 +138,6 @@ class Evaluator(object):
 
 
         if ignore_users is not None:
-            print("Ignoring {} Users".format(len(ignore_users)))
             self.ignore_users_ID = np.array(ignore_users)
             self.usersToEvaluate = set(self.usersToEvaluate) - set(ignore_users)
         else:
@@ -344,7 +343,6 @@ class SequentialEvaluator(Evaluator):
         user_batch_end = 0
 
         while user_batch_start < len(self.usersToEvaluate):
-
             user_batch_end = user_batch_start + block_size
             user_batch_end = min(user_batch_end, len(usersToEvaluate))
 
@@ -435,7 +433,6 @@ class SequentialEvaluator(Evaluator):
 
 
         results_dict, n_users_evaluated = self._run_evaluation_on_selected_users(recommender_object, self.usersToEvaluate)
-
 
         if (n_users_evaluated > 0):
 
