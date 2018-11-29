@@ -184,14 +184,14 @@ class UserKNNCFRecommender(Recommender, SimilarityMatrixRecommender):
 
 class HybridRecommender(Recommender, SimilarityMatrixRecommender):
 
-    def __init__(self, URM ,URM_train, recommender_1, recommender_2, recommender_3, sparse_weights=True, normalize=True):
+    def __init__(self, URM ,URM_train, recommender_1, recommender_2, sparse_weights=True, normalize=True):
         super(HybridRecommender, self).__init__()
         self.normalize = normalize
         self.URM = URM
         self.URM_train = check_matrix(URM_train, 'csr')
         self.recommender_CB = recommender_1
         self.recommender_CF = recommender_2
-        self.recommender_UCF = recommender_3
+        #self.recommender_UCF = recommender_3
         self.sparse_weights = sparse_weights
 
     def fit( self, k_1=5, shrink_1=0.5, k_2=800, shrink_2=10, k_3=300, shrink_3=300, similarity='cosine', normalize=True ):
@@ -205,22 +205,21 @@ class HybridRecommender(Recommender, SimilarityMatrixRecommender):
 
         self.recommender_CB.fit(shrink=self.shrink_CB, k=self.k_CB)
         self.recommender_CF.fit(shrink=self.shrink_CF, k=self.k_CF)
-        self.recommender_UCF.fit(shrink=self.shrink_UCF, k=self.k_UCF)
+        #self.recommender_UCF.fit(shrink=self.shrink_UCF, k=self.k_UCF)
 
-    def recommend( self, user_id, at=None, exclude_seen=True, weight_CB=0.08, weight_CF=0.80, weight_UCF=0.12):
+    def recommend( self, user_id, at=None, exclude_seen=True, weight_CB=0.1, weight_CF=0.9):
         # compute the scores using the dot product
         user_profile = self.URM[user_id]
-
         scores_CB = user_profile.dot(self.recommender_CB.W_sparse).toarray().ravel()
         scores_CF = user_profile.dot(self.recommender_CF.W_sparse).toarray().ravel()
-        scores_UCF = self.recommender_UCF.W_sparse[user_id].dot(self.URM_train).toarray().ravel()
+        #scores_UCF = self.recommender_UCF.W_sparse[user_id].dot(self.URM_train).toarray().ravel()
 
         # use weights
         scores_CB = scores_CB * weight_CB
         scores_CF = scores_CF * weight_CF
-        scores_UCF = scores_UCF * weight_UCF
+        #scores_UCF = scores_UCF * weight_UCF
 
-        self.scores = scores_CB + scores_CF + scores_UCF
+        self.scores = scores_CB + scores_CF # + scores_UCF
 
         if exclude_seen:
             scores = self.filter_seen(user_id, self.scores)

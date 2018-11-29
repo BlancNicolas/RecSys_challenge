@@ -68,6 +68,7 @@ alpha_list = np.arange(0.1, 1.0, 0.1)
 l1 = (alpha_list)
 weight_list = list(itertools.product(l1, l1, l1))
 only_sum_equal_1 = list(filter(lambda x: sum(list(x)) == 1, weight_list))
+only_sum_equal_1 = list(map(lambda x : list(x), only_sum_equal_1))
 
 
 for x in only_sum_equal_1:
