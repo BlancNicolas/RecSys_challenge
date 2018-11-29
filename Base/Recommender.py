@@ -241,4 +241,3 @@ class Recommender(object):
 
 
         print("{}: Loading complete".format(self.RECOMMENDER_NAME))
-

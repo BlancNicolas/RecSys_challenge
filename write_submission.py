@@ -15,5 +15,5 @@ def write_submission(target_users, recommender_object, path, at=10, verbose=Fals
         for user_id in target_users['playlist_id']:
             if verbose:
                 print("User {}".format(user_id))
-            recommended_items = recommender_object.recommend(user_id, at=at)
+            recommended_items = recommender_object.recommend(user_id, cutoff=at)
             csv_writer.writerow([user_id, ' '.join(str(x) for x in recommended_items)])

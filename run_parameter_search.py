@@ -9,6 +9,7 @@ Created on 22/11/17
 from Base.NonPersonalizedRecommender import TopPop, Random
 from KNN.UserKNNCFRecommender import UserKNNCFRecommender
 from KNN.ItemKNNCFRecommender import ItemKNNCFRecommender
+from KNN.ItemKNNCBFRecommender import ItemKNNCBFRecommender
 from SLIM_BPR.Cython.SLIM_BPR_Cython import SLIM_BPR_Cython
 from SLIM_ElasticNet.SLIMElasticNetRecommender import SLIMElasticNetRecommender
 from GraphBased.P3alphaRecommender import P3alphaRecommender
@@ -518,15 +519,15 @@ def read_data_split_and_search():
         #HybridRecommender,
         #Random,
         #TopPop,
-        P3alphaRecommender,
-        RP3betaRecommender,
-        ItemKNNCFRecommender,
-        UserKNNCFRecommender,
-        MatrixFactorization_BPR_Cython,
-        MatrixFactorization_FunkSVD_Cython,
-        PureSVDRecommender,
-        SLIM_BPR_Cython,
-        SLIMElasticNetRecommender
+        #P3alphaRecommender,
+        #RP3betaRecommender,
+        #ItemKNNCFRecommender,
+        #UserKNNCFRecommender,
+        #MatrixFactorization_BPR_Cython,
+        #MatrixFactorization_FunkSVD_Cython,
+        #PureSVDRecommender,
+        #SLIM_BPR_Cython,
+        #SLIMElasticNetRecommender
     ]
 
 

@@ -43,9 +43,17 @@ class SimilarityMatrixRecommender(object):
             relevant_weights = self.W[user_profile]
             return relevant_weights.T.dot(user_ratings)
 
+    def compute_score_content_based( self, user_id ):
 
-
-
+        # TODO : Implement else for compute_score_content_based
+        if self.sparse_weights:
+            user_profile = self.URM_train[user_id]
+            # print(user_profile.shape)
+            # print(self.W_sparse.shape)
+            # print("Before error")
+            return user_profile.dot(self.W_sparse).toarray()
+        else:
+            "Can't be computed without sparse_weights"
 
     def compute_score_user_based(self, user_id):
 
