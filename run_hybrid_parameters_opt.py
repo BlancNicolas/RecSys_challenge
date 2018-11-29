@@ -25,8 +25,9 @@ print(URM_train.shape)
 print(URM_validation.shape)
 print(URM_test.shape)
 
-
-
+# ------------------------
+# Instanciating Evaluators
+# ------------------------
 
 evaluator_validation = SequentialEvaluator(URM_validation, cutoff_list=[10])
 evaluator_test = SequentialEvaluator(URM_test, cutoff_list=[10])
@@ -34,10 +35,22 @@ evaluator_test = SequentialEvaluator(URM_test, cutoff_list=[10])
 evaluator_validation = EvaluatorWrapper(evaluator_validation)
 evaluator_test = EvaluatorWrapper(evaluator_test)
 
+# ------------------------
+# Recommender class definition
+# ------------------------
+
 recommender_class = ItemKNNScoresHybridRecommender_multiple
+
+# ------------------------
+# Instanciating BayesianSearch
+# ------------------------
 parameterSearch = BayesianSearch(recommender_class,
                                  evaluator_validation=evaluator_validation,
                                  evaluator_test=evaluator_test)
+
+# ------------------------
+# Generating lists of weights to evaluate
+# ------------------------
 
 alpha_list = np.arange(0.1, 1.0, 0.1)
 l1 = (alpha_list)
@@ -48,10 +61,21 @@ list_weight_1 = list(map(lambda x : x[0], only_sum_equal_1))
 list_weight_2 = list(map(lambda x : x[1], only_sum_equal_1))
 list_weight_3 = list(map(lambda x : x[2], only_sum_equal_1))
 
+# -------------------------------
+# Defining parameters dictionnary
+# -------------------------------
+
 hyperparamethers_range_dictionary = {}
 hyperparamethers_range_dictionary["weight_1"] = list_weight_1
 hyperparamethers_range_dictionary["weight_2"] = list_weight_2
 hyperparamethers_range_dictionary["weight_3"] = list_weight_3
+
+
+# -------------------------------------------------------------
+# Fitting recommender:
+#
+# The hybrid recommender constructor needs fitted recommenders
+# -------------------------------------------------------------
 
 UserBased = UserKNNCFRecommender(URM_train)
 ItemBased = ItemKNNCFRecommender(URM_train)
@@ -62,6 +86,9 @@ ItemBased.fit(topK=300, shrink=100)
 ContentBased.fit(topK=50, shrink=100)
 
 
+# -------------------------------
+# Instanciating dictionnary
+# -------------------------------
 
 recommenderDictionary = {DictionaryKeys.CONSTRUCTOR_POSITIONAL_ARGS: [URM_train, ItemBased, ContentBased, UserBased],
                          DictionaryKeys.CONSTRUCTOR_KEYWORD_ARGS: {},
@@ -69,12 +96,18 @@ recommenderDictionary = {DictionaryKeys.CONSTRUCTOR_POSITIONAL_ARGS: [URM_train,
                          DictionaryKeys.FIT_KEYWORD_ARGS: dict(),
                          DictionaryKeys.FIT_RANGE_KEYWORD_ARGS: hyperparamethers_range_dictionary}
 
-
+# -------------------------------
+# Set path and file
+# -------------------------------
 output_root_path = "result_experiments/Hybrid_opt.txt"
 
 # If directory does not exist, create
 if not os.path.exists(output_root_path):
     os.makedirs(output_root_path)
+
+# -------------------------------
+# n_cases, metric to optimize
+# -------------------------------
 
 n_cases = 10
 metric_to_optimize = "MAP"
