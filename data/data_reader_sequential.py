@@ -4,10 +4,10 @@ import scipy.sparse as sps
 import random
 import numpy as np
 
-tracks_path = "tracks.csv"
-train_path = "train.csv"
-train_data_sequential_path = "train_sequential.csv"
-target_data_path = "target_playlists.csv"
+tracks_path = "data/tracks.csv"
+train_path = "data/train.csv"
+train_data_sequential_path = "data/train_sequential.csv"
+target_data_path = "data/target_playlists.csv"
 
 def random_split(lis, percent_train=0.8):
     random.shuffle(lis)
@@ -31,10 +31,6 @@ class SequentialReader:
 
         #Tests data
         s1 = pd.merge(self.train_data_sequential, self.train_data, how='inner', on=['playlist_id', 'track_id'])
-        print("TRAIN DATA SIZE", len(self.train_data))
-        print("TRAIN SEQUENTIAL SIZE,", len(self.train_data_sequential))
-        print("INTERSECT", len(s1))
-        print("EXPECTED RANDOM SIZE", len(self.train_data) - len(self.train_data_sequential))
 
 
 
@@ -119,20 +115,22 @@ class SequentialReader:
         self.URM_all = sps.coo_matrix((ratingsList_URM, (userList_URM, itemList_URM)))
 
         # ICM
-        ICM_all = sps.coo_matrix((ratingsList_URM, (userList_URM, itemList_URM)), shape=self.URM_all.shape)
-        self.ICM_all = ICM_all.tocsr()
+        self.ICM_all = sps.coo_matrix(self.tracks_data.values)
+        self.ICM_all = self.ICM_all.tocsr()
 
         # URM_train
         train_userList_URM = self.train_set['playlist_id'].tolist()
         train_itemList_URM = self.train_set['track_id'].tolist()
         train_ratingsList_URM = np.ones(len(self.train_set['track_id']))
-        self.URM_train = sps.coo_matrix((train_ratingsList_URM, (train_userList_URM, train_itemList_URM)))
+        self.URM_train = sps.coo_matrix((train_ratingsList_URM, (train_userList_URM, train_itemList_URM)),
+                                        shape=self.URM_all.shape)
 
         # URM_test
         test_userList_URM = self.test_set['playlist_id'].tolist()
         test_itemList_URM = self.test_set['track_id'].tolist()
         test_ratingsList_URM = np.ones(len(self.test_set['track_id']))
-        self.URM_test = sps.coo_matrix((test_ratingsList_URM, (test_userList_URM, test_itemList_URM)))
+        self.URM_test = sps.coo_matrix((test_ratingsList_URM, (test_userList_URM, test_itemList_URM)),
+                                       shape=self.URM_all.shape)
 
 
 
@@ -147,15 +145,6 @@ class SequentialReader:
 
     def get_URM_train(self):
         return self.URM_train.tocsr()
-
-
-
-
-
-
-
-
-reader = SequentialReader()
 
 
 

@@ -9,6 +9,10 @@ Created on 21/10/2018
 import numpy as np
 import scipy.sparse as sps
 
+import warnings
+
+warnings.warn("DEPRECATED! Bugs on returned shape, impossible to have good shapes if you apply it twice", DeprecationWarning)
+
 def train_test_holdout(URM_all, train_perc = 0.8):
 
     numInteractions = URM_all.nnz

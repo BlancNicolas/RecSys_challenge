@@ -1,6 +1,6 @@
 from ParameterTuning.AbstractClassSearch import EvaluatorWrapper
 from Base.Evaluation.Evaluator import SequentialEvaluator
-from data.Data_formating import Data
+from data.data_reader_sequential import SequentialReader
 from data_splitter import train_test_holdout
 from run_parameter_search import runParameterSearch_Content
 from functools import partial
@@ -9,21 +9,30 @@ from ParameterTuning.BayesianSearch import BayesianSearch
 from ParameterTuning.AbstractClassSearch import DictionaryKeys
 from data.Movielens_10M.Movielens10MReader import split_train_validation_test
 
-data = Data()
+data = SequentialReader()
+
 URM = data.get_URM()
 ICM = data.get_ICM()
 
-URM_train, URM_validation, URM_test = split_train_validation_test(URM, [0.8, 0.1, 0.1])
+URM_train = data.get_URM_train()
+URM_test = data.get_URM_test()
+
+print("URM_train shape : {}".format(URM_train.shape))
+print("URM_test shape : {}".format(URM_test.shape))
+print("ICM shape : {}".format(ICM.shape))
+
+
+#URM_train, URM_validation, URM_test = split_train_validation_test(URM, [0.8, 0.1, 0.1])
 
 # ------------------------
 # Instanciating Evaluators
 # ------------------------
 
-evaluator_validation = SequentialEvaluator(URM_validation, cutoff_list=[10])
-evaluator_test = SequentialEvaluator(URM_test, cutoff_list=[10])
+evaluator_validation = SequentialEvaluator(URM_test, cutoff_list=[10])
+#evaluator_test = SequentialEvaluator(URM_test, cutoff_list=[10])
 
 evaluator_validation = EvaluatorWrapper(evaluator_validation)
-evaluator_test = EvaluatorWrapper(evaluator_test)
+#evaluator_test = EvaluatorWrapper(evaluator_test)
 
 # ------------------------
 # Recommender class definition
@@ -36,8 +45,7 @@ recommender_class = ItemKNNCBFRecommender
 # ------------------------
 
 parameterSearch = BayesianSearch(recommender_class,
-                                 evaluator_validation=evaluator_validation,
-                                 evaluator_test=evaluator_test)
+                                 evaluator_validation=evaluator_validation)
 
 # -------------------------------
 # Defining parameters dictionnary

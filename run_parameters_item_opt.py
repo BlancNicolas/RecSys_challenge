@@ -3,24 +3,32 @@ from Base.Evaluation.Evaluator import SequentialEvaluator
 from data.Data_formating import Data
 from KNN.ItemKNNCFRecommender import ItemKNNCFRecommender
 from ParameterTuning.BayesianSearch import BayesianSearch
+from data.data_reader_sequential import SequentialReader
 from ParameterTuning.AbstractClassSearch import DictionaryKeys
 from data.Movielens_10M.Movielens10MReader import split_train_validation_test
 
-data = Data()
+data = SequentialReader()
+
 URM = data.get_URM()
 ICM = data.get_ICM()
 
-URM_train, URM_validation, URM_test = split_train_validation_test(URM, [0.8, 0.1, 0.1])
+URM_train = data.get_URM_train()
+URM_test = data.get_URM_test()
+
+print("URM_train shape : {}".format(URM_train.shape))
+print("URM_test shape : {}".format(URM_test.shape))
+print("ICM shape : {}".format(ICM.shape))
+
 
 # ------------------------
 # Instanciating Evaluators
 # ------------------------
 
-evaluator_validation = SequentialEvaluator(URM_validation, cutoff_list=[10])
-evaluator_test = SequentialEvaluator(URM_test, cutoff_list=[10])
+evaluator_validation = SequentialEvaluator(URM_test, cutoff_list=[10])
+#evaluator_test = SequentialEvaluator(URM_test, cutoff_list=[10])
 
 evaluator_validation = EvaluatorWrapper(evaluator_validation)
-evaluator_test = EvaluatorWrapper(evaluator_test)
+#evaluator_test = EvaluatorWrapper(evaluator_test)
 
 # ------------------------
 # Recommender class definition
@@ -33,8 +41,7 @@ recommender_class = ItemKNNCFRecommender
 # ------------------------
 
 parameterSearch = BayesianSearch(recommender_class,
-                                 evaluator_validation=evaluator_validation,
-                                 evaluator_test=evaluator_test)
+                                 evaluator_validation=evaluator_validation)
 
 # -------------------------------
 # Defining parameters dictionnary
@@ -59,10 +66,11 @@ recommenderDictionary = {DictionaryKeys.CONSTRUCTOR_POSITIONAL_ARGS: [URM_train]
 
 output_root_path = "result_experiments/Item-based_opt.txt"
 
-n_cases = 10
+n_cases = 20
 metric_to_optimize = "MAP"
 
 best_parameters = parameterSearch.search(recommenderDictionary,
                                          n_cases = n_cases,
                                          output_root_path = output_root_path,
-                                         metric=metric_to_optimize)
+                                         metric=metric_to_optimize,
+                                         init_points=15)
