@@ -2,7 +2,7 @@ from ParameterTuning.AbstractClassSearch import EvaluatorWrapper
 from Base.Evaluation.Evaluator import SequentialEvaluator
 from KNN.ItemKNNCFRecommender import ItemKNNCFRecommender
 from KNN.ItemKNNCBFRecommender import ItemKNNCBFRecommender
-from KNN.ItemKNNScoresHybridRecommender import ItemKNNScoresHybridRecommender_multiple
+from KNN.ItemKNNScoresHybridRecommender import ItemKNNScoresHybridRecommender_multiple_grid
 from KNN.UserKNNCFRecommender import UserKNNCFRecommender
 from ParameterTuning.BayesianSearch import BayesianSearch
 from data.data_reader_sequential import SequentialReader
@@ -34,23 +34,15 @@ print(URM_test.shape)
 # Instanciating Evaluators
 # ------------------------
 
-evaluator_validation = SequentialEvaluator(URM_test, cutoff_list=[10])
+evaluator_test = SequentialEvaluator(URM_test, cutoff_list=[10])
 #evaluator_test = SequentialEvaluator(URM_test, cutoff_list=[10])
 
-evaluator_validation = EvaluatorWrapper(evaluator_validation)
+evaluator_test = EvaluatorWrapper(evaluator_test)
 #evaluator_test = EvaluatorWrapper(evaluator_test)
 
 # ------------------------
 # Recommender class definition
 # ------------------------
-
-recommender_class = ItemKNNScoresHybridRecommender_multiple
-
-# ------------------------
-# Instanciating BayesianSearch
-# ------------------------
-parameterSearch = BayesianSearch(recommender_class,
-                                 evaluator_validation=evaluator_validation)
 
 # ------------------------
 # Generating lists of weights to evaluate
@@ -62,19 +54,6 @@ l1 = (alpha_list)
 weight_list = list(itertools.product(l1, l1, l1))
 only_sum_equal_1 = list(filter(lambda x: sum(list(x)) == 1, weight_list))
 only_sum_equal_1 = list(map(lambda x : list(x), only_sum_equal_1))
-list_weight_1 = list(map(lambda x : x[0], only_sum_equal_1))
-list_weight_2 = list(map(lambda x : x[1], only_sum_equal_1))
-list_weight_3 = list(map(lambda x : x[2], only_sum_equal_1))
-
-# -------------------------------
-# Defining parameters dictionnary
-# -------------------------------
-
-hyperparamethers_range_dictionary = {}
-hyperparamethers_range_dictionary["weight_1"] = list_weight_1
-hyperparamethers_range_dictionary["weight_2"] = list_weight_2
-hyperparamethers_range_dictionary["weight_3"] = list_weight_3
-
 
 # -------------------------------------------------------------
 # Fitting recommender:
@@ -90,36 +69,44 @@ UserBased.fit(topK=500, shrink=10)
 ItemBased.fit(topK=400, shrink=50)
 ContentBased.fit(topK=5, shrink=1000)
 
-
-# -------------------------------
-# Instanciating dictionnary
-# -------------------------------
-
-recommenderDictionary = {DictionaryKeys.CONSTRUCTOR_POSITIONAL_ARGS: [URM_train, ItemBased, ContentBased, UserBased],
-                         DictionaryKeys.CONSTRUCTOR_KEYWORD_ARGS: {},
-                         DictionaryKeys.FIT_POSITIONAL_ARGS: dict(),
-                         DictionaryKeys.FIT_KEYWORD_ARGS: dict(),
-                         DictionaryKeys.FIT_RANGE_KEYWORD_ARGS: hyperparamethers_range_dictionary}
+hybrid = ItemKNNScoresHybridRecommender_multiple_grid(URM_train, ItemBased, ContentBased, UserBased)
 
 # -------------------------------
 # Set path and file
 # -------------------------------
-output_root_path = "result_experiments/Hybrid_opt.txt"
+output_root_path = "result_experiments/"
 
 # If directory does not exist, create
 if not os.path.exists(output_root_path):
     os.makedirs(output_root_path)
 
+logFile = open(output_root_path + "Hybrid_GridSearch.txt", "a")
 
 # -------------------------------
-# n_cases, metric to optimize
+# metric to optimize
 # -------------------------------
 
-n_cases = 20
-metric_to_optimize = "MAP"
+metric_to_optimize = "map"
+map_list = []
+best_dict = {
+    "MAP" : 0,
+    "WEIGHTS" : [0,0,0],
+}
+i=0
+for x in only_sum_equal_1:
+    i += 1
+    print("---- {} \%".format(i/len(only_sum_equal_1)))
+    hybrid.fit(weights=x)
+    res_dict = evaluator_test.evaluateRecommender(hybrid)
+    map_list.append(res_dict[0][10]["MAP"])
+    if res_dict[0][10]["MAP"] > best_dict["MAP"]:
+        best_dict["MAP"] = res_dict[0][10]["MAP"]
+        best_dict["WEIGHTS"] = x
+        print("New best config : {}".format(best_dict))
+        if (logFile != None):
+            logFile.write("Best config: {}, Results {}\n".format(best_dict))
+            logFile.flush()
 
-best_parameters = parameterSearch.search(recommenderDictionary,
-                                         n_cases = n_cases,
-                                         output_root_path = output_root_path,
-                                         metric=metric_to_optimize,
-                                         init_points=10)
+print("Best config : {}".format(best_dict))
+
+
